@@ -5,21 +5,22 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 
-class DBHlpr (context: Context) : SQLiteOpenHelper(context, "details.db", null, 1) {
+class DBHlpr (context: Context) : SQLiteOpenHelper(context, "details.db", null, 3) {
 
     var sqLiteDatabase : SQLiteDatabase = writableDatabase
 
     override fun onCreate(db: SQLiteDatabase?) {
         if (db != null) {
-            db.execSQL("create table notes (pk INTEGER PRIMARY KEY AUTOINCREMENT , Notes text)")
+            db.execSQL("create table notes (pk INTEGER PRIMARY KEY AUTOINCREMENT , Message text)")
         }
     }
 
-    override fun onUpgrade(p0: SQLiteDatabase?, p1: Int, p2: Int) {
+    override fun onUpgrade(db: SQLiteDatabase?, p1: Int, p2: Int) {
         // I dropped the previous table because I added the primary key so to keep the data consistent
-//        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS notes")
-//        onCreate(sqLiteDatabase)
+        db!!.execSQL("DROP TABLE IF EXISTS notes")
+        onCreate(db)
     }
 
     fun saveData(note : Notes){
@@ -41,12 +42,23 @@ class DBHlpr (context: Context) : SQLiteOpenHelper(context, "details.db", null, 
             println("No data found")
 
             }else{
-                while (c.moveToNext()){ //Iterate through the table
+                do{ //Iterate through the table
                     val id = c.getInt(0) //  the number refers to the num of the column
-                    val msg = c.getString(0)
+                    val msg = c.getString(c.getColumnIndex("Message"))
                     notes.add(Notes(id,msg))
-                }
+                }while (c.moveToNext())
         }
         return notes
+    }
+
+    fun updateData(pk : Int, Message: String) {
+        val cv = ContentValues()
+        cv.put("Message", Message)
+        sqLiteDatabase.update("notes", cv, "pk = $pk", null)
+    }
+
+    fun deleteData(pk : Int){
+        sqLiteDatabase.delete("notes", "pk = $pk", null)
+        Log.d("DBHlpr", "pk $pk")
     }
 }
