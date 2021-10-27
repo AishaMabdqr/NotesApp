@@ -37,15 +37,13 @@ class MainActivity : AppCompatActivity() {
         bAdd.setOnClickListener {
             addNotes()
              retrieveNotes()
+            rvAdapter.update(notesArray)
         }
 
-        updateRv()
-    }
-
-    fun updateRv(){
         rvAdapter = RVAdapter(this,notesArray)
         rvItems.adapter = rvAdapter
         rvItems.layoutManager = LinearLayoutManager(this)
+
     }
 
     private fun addNotes(){
@@ -56,45 +54,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun retrieveNotes(){
         notesArray = dbhelper.retrieveNotes()
-        updateRv()
-    }
-
-    fun updateData(pk: Int, newNote : String){
-        if (pk != null) {
-            dbhelper.updateData(pk, newNote)
-            updateRv()
-        }
-        else {
-            Log.d("Main ", "pk is null")
-        }
 
     }
+
 
      fun deleteData(pk : Int){
          if (pk != null) {
              dbhelper.deleteData(pk)
-             updateRv()
          } else {
              Log.d("Main ", "pk is null")
          }
     }
 
-    fun dialog(pk : Int){
-        val dialogBuilder = AlertDialog.Builder(this)
-        val updatedNote = EditText(this)
-        updatedNote.hint = "Enter new note"
-
-        dialogBuilder
-            .setCancelable(false)
-            .setPositiveButton("Save", DialogInterface.OnClickListener {
-                    _, _ -> updateData(pk, updatedNote.text.toString())
-            })
-            .setNegativeButton("Cancel", DialogInterface.OnClickListener {
-                    dialog, _ -> dialog.cancel()
-            })
-        val alert = dialogBuilder.create()
-        alert.setTitle("Update Note")
-        alert.setView(updatedNote)
-        alert.show()
-    }
 }

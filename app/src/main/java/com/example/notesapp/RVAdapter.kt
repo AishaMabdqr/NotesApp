@@ -10,7 +10,12 @@ import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.item_row.view.*
 
-class RVAdapter (val activity: MainActivity, val itemList : ArrayList<Notes>) : RecyclerView.Adapter<RVAdapter.ItemViewHolder>() {
+
+
+class RVAdapter (val activity: MainActivity, var itemList : ArrayList<Notes>) : RecyclerView.Adapter<RVAdapter.ItemViewHolder>() {
+
+    private val dbhelper by lazy { DBHlpr(activity) }
+
     class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     }
@@ -32,17 +37,45 @@ class RVAdapter (val activity: MainActivity, val itemList : ArrayList<Notes>) : 
             tvItems.text = items.message
 
             bEdit.setOnClickListener {
-                activity.dialog(items.id)
+
+                val dialogBuilder = AlertDialog.Builder(activity)
+                val updatedNote = EditText(activity)
+                updatedNote.hint = "Enter new note"
+
+                dialogBuilder
+                    .setCancelable(false)
+                    .setPositiveButton("Save", DialogInterface.OnClickListener {
+                            _, _ -> dbhelper.updateData(items.id, updatedNote.text.toString())
+                        itemList.clear()
+                        itemList.addAll(dbhelper.retrieveNotes())
+                        update(itemList)
+
+                    })
+                    .setNegativeButton("Cancel", DialogInterface.OnClickListener {
+                            dialog, _ -> dialog.cancel()
+                    })
+                val alert = dialogBuilder.create()
+                alert.setTitle("Update Note")
+                alert.setView(updatedNote)
+                alert.show()
             }
 
             bDel.setOnClickListener {
                 var selectedItems = items.id
                 activity.deleteData(selectedItems)
                 Log.d("RVAdapter ", "id equal $selectedItems")
+                itemList.clear()
+                itemList.addAll(dbhelper.retrieveNotes())
+                update(itemList)
             }
         }
     }
 
     override fun getItemCount() = itemList.size
+
+    fun update(itemList : ArrayList<Notes>){
+        this.itemList = itemList
+        notifyDataSetChanged()
+    }
 
 }
